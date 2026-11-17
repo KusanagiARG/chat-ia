@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Chat IA</title>
+<style>
+:root{--red:#e11d2e;--gold:#d4af37;--tx:#f2f2f2;--card:#0a0a0a}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#000;color:var(--tx);font:16px/1.4 Georgia,serif}
+body{display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+button{background:none;border:0;color:var(--red);cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--gold)}
+.ic{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;flex:none}
+.ic svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic.on{background:var(--red);color:#000}
+header{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 6px 16px;border-bottom:1px solid var(--gold)}
+h1{font-size:20px;margin:0;color:var(--gold);font-weight:normal;letter-spacing:.04em}
+#chat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:86%;padding:10px 14px;border:1px solid var(--gold);white-space:pre-wrap;overflow-wrap:anywhere}
+.u{align-self:flex-end;background:#16050a;border-radius:18px 18px 4px 18px}
+.a{align-self:flex-start;background:var(--card);border-radius:18px 18px 18px 4px}
+.err{color:var(--red);border-color:var(--red)}
+.vacio{margin:auto;text-align:center;color:#9a8a55;max-width:260px}
+footer{display:flex;gap:4px;align-items:flex-end;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--gold)}
+textarea,input{background:var(--card);color:var(--tx);border:1px solid var(--gold);font:inherit}
+#txt{flex:1;resize:none;max-height:120px;border-radius:22px;padding:11px 16px}
+#ajustes{position:fixed;inset:0;background:#000;overflow-y:auto;padding:16px;padding-top:calc(16px + env(safe-area-inset-top));display:none}
+#ajustes.open{display:block}
+#ajustes h2{color:var(--gold);font-weight:normal;font-size:18px;margin:18px 0 6px}
+#ajustes label{display:block;font-size:14px;color:#cfc08a;margin-top:8px}
+#ajustes input,#ajustes textarea{width:100%;padding:10px;border-radius:10px;margin-top:3px}
+.pie{color:#9a8a55;font-size:14px}
+.ok{background:var(--gold);color:#000;border-radius:22px;padding:12px 24px;font:inherit;margin:18px 0 30px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Chat IA</h1>
+  <div>
+    <button class="ic" id="bVoz" aria-label="Respuesta con voz"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+    <button class="ic" id="bAj" aria-label="Ajustes"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+</header>
+<div id="chat"><div class="vacio" id="vacio">Escribe o toca el micrófono para empezar a hablar.</div></div>
+<footer>
+  <button class="ic" id="bMic" aria-label="Hablar"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+  <textarea id="txt" rows="1" placeholder="Escribe un mensaje"></textarea>
+  <button class="ic" id="bEnv" aria-label="Enviar"><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg></button>
+</footer>
+
+<div id="ajustes">
+  <h2>Claves de API</h2>
+  <p class="pie">Se guardan solo en este teléfono. La app prueba los proveedores en orden y pasa al siguiente si uno falla o se queda sin cuota.</p>
+  <div id="provs"></div>
+  <h2>Personalidad</h2>
+  <textarea id="persona" rows="5"></textarea>
+  <button class="ok" id="bOk">Guardar</button>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const P=[
+ {id:'groq',n:'Groq',u:'https://api.groq.com/openai/v1/chat/completions',m:'llama-3.3-70b-versatile'},
+ {id:'gemini',n:'Gemini',u:'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',m:'gemini-2.0-flash'},
+ {id:'cerebras',n:'Cerebras',u:'https://api.cerebras.ai/v1/chat/completions',m:'llama-3.3-70b'},
+ {id:'openrouter',n:'OpenRouter',u:'https://openrouter.ai/api/v1/chat/completions',m:'meta-llama/llama-3.3-70b-instruct:free'}
+];
+let S={keys:{},models:{},voz:true,persona:'Eres un compañero de charla cálido, curioso y cercano. Respondes en español con mensajes breves y naturales, como en una conversación hablada.'};
+try{Object.assign(S,JSON.parse(localStorage.getItem('cfg')||'{}'))}catch(e){}
+const guardar=()=>{try{localStorage.setItem('cfg',JSON.stringify(S))}catch(e){}};
+let hist=[],ocupado=false;
+
+function burbuja(t,c){
+  const v=$('#vacio');if(v)v.remove();
+  const d=document.createElement('div');d.className='m '+c;d.textContent=t;
+  $('#chat').appendChild(d);$('#chat').scrollTop=1e9;return d;
+}
+function hablar(t){
+  if(!S.voz||!window.speechSynthesis)return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t.replace(/[*_#`]/g,''));
+  u.lang='es-ES';speechSynthesis.speak(u);
+}
+async function preguntar(){
+  const msgs=[{role:'system',content:S.persona},...hist.slice(-20)];
+  const fallos=[];
+  for(const p of P){
+    const k=S.keys[p.id];if(!k)continue;
+    try{
+      const r=await fetch(p.u,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+k},body:JSON.stringify({model:S.models[p.id]||p.m,messages:msgs})});
+      if(!r.ok)throw new Error('error '+r.status);
+      const d=await r.json();
+      return d.choices[0].message.content;
+    }catch(e){fallos.push(p.n+': '+e.message)}
+  }
+  throw new Error(fallos.length?'Ningún proveedor respondió. '+fallos.join(' · '):'Agrega una clave de API en ajustes.');
+}
+async function enviar(){
+  const t=$('#txt').value.trim();
+  if(!t||ocupado)return;
+  $('#txt').value='';$('#txt').style.height='auto';
+  ocupado=true;
+  burbuja(t,'u');hist.push({role:'user',content:t});
+  const b=burbuja('…','a');
+  try{
+    const r=await preguntar();
+    b.textContent=r;hist.push({role:'assistant',content:r});hablar(r);
+  }catch(e){b.textContent=e.message;b.classList.add('err');hist.pop()}
+  ocupado=false;$('#chat').scrollTop=1e9;
+}
+$('#bEnv').onclick=enviar;
+$('#txt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviar()}});
+$('#txt').addEventListener('input',e=>{e.target.style.height='auto';e.target.style.height=e.target.scrollHeight+'px'});
+
+// Micrófono
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null;
+$('#bMic').onclick=()=>{
+  if(!SR){burbuja('Este navegador no permite dictado por voz. Prueba con Chrome.','a err');return}
+  if(rec){rec.stop();return}
+  speechSynthesis&&speechSynthesis.cancel();
+  rec=new SR();rec.lang='es-ES';
+  rec.onstart=()=>$('#bMic').classList.add('on');
+  rec.onresult=e=>{$('#txt').value=e.results[0][0].transcript;enviar()};
+  rec.onerror=()=>{};
+  rec.onend=()=>{$('#bMic').classList.remove('on');rec=null};
+  rec.start();
+};
+
+// Voz de respuesta
+function pintaVoz(){$('#bVoz').classList.toggle('on',S.voz)}
+$('#bVoz').onclick=()=>{S.voz=!S.voz;if(!S.voz&&window.speechSynthesis)speechSynthesis.cancel();guardar();pintaVoz()};
+pintaVoz();
+
+// Ajustes
+function pintaAjustes(){
+  $('#provs').innerHTML='';
+  P.forEach((p,i)=>{
+    const d=document.createElement('div');
+    d.innerHTML='<label>'+(i+1)+'. '+p.n+' — clave</label><input type="password" autocomplete="off" data-k="'+p.id+'"><label>Modelo</label><input data-m="'+p.id+'">';
+    d.querySelector('[data-k]').value=S.keys[p.id]||'';
+    d.querySelector('[data-m]').value=S.models[p.id]||p.m;
+    $('#provs').appendChild(d);
+  });
+  $('#persona').value=S.persona;
+}
+$('#bAj').onclick=()=>{pintaAjustes();$('#ajustes').classList.add('open')};
+$('#bOk').onclick=()=>{
+  P.forEach(p=>{
+    S.keys[p.id]=document.querySelector('[data-k='+p.id+']').value.trim();
+    S.models[p.id]=document.querySelector('[data-m='+p.id+']').value.trim()||p.m;
+  });
+  S.persona=$('#persona').value.trim()||S.persona;
+  guardar();$('#ajustes').classList.remove('open');
+};
+if(!P.some(p=>S.keys[p.id]))$('#bAj').click();
+</script>
+</body>
+</html>
